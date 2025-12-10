@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #333;
+    }
+
+    /* Spinner minimalista */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: #007AFF; /* Azul padrão iOS/Branch */
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    p {
+      font-size: 16px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="spinner"></div>
+  <p>Redirecting...</p>
+
+  <script>
+    (function() {
+      // ================= CONFIGURAÇÕES =================
+      // Coloque aqui o esquema definido no seu pubspec.yaml/AndroidManifest
+      const SCHEME = 'pocdeeplink'; 
+      
+      // Package ID do Android (ex: com.exemplo.app)
+      const ANDROID_PACKAGE = 'com.nianticlabs.pokemongo'; 
+      
+      // URLs Completas da Loja
+      const APP_STORE_URL = 'https://apps.apple.com/app/pokemon-go/id1094591345';
+      const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
+      // =================================================
+
+      // Pega o caminho (ex: /produto/123) e query params da URL atual
+      // Remove a barra inicial se houver para não duplicar (ex: pocdeeplink://produto/123)
+      const pathAndQuery = (window.location.pathname + window.location.search + window.location.hash).replace(/^\//, '');
+
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+
+      // Função para redirecionar
+      function startRedirect() {
+        
+        // ---------------------------------------------------------
+        // LÓGICA ANDROID (Intent Scheme - O método mais robusto)
+        // ---------------------------------------------------------
+        if (isAndroid) {
+          // O Android Intent tenta abrir o app. Se falhar, o navegador 
+          // automaticamente usa o S.browser_fallback_url.
+          // Formato: intent://CAMINHO#Intent;scheme=ESQUEMA;package=PACKAGE;S.browser_fallback_url=URL_FALLBACK;end
+          
+          const fallbackUrl = encodeURIComponent(PLAY_STORE_URL);
+          const intentUrl = `intent://${pathAndQuery}#Intent;scheme=${SCHEME};package=${ANDROID_PACKAGE};S.browser_fallback_url=${fallbackUrl};end`;
+          
+          window.location.href = intentUrl;
+          return; 
+        }
+
+        // ---------------------------------------------------------
+        // LÓGICA IOS (Custom Scheme + Timeout)
+        // ---------------------------------------------------------
+        if (isIOS) {
+          // Tenta abrir o App
+          window.location.href = `${SCHEME}://${pathAndQuery}`;
+
+          // Se o app abrir, o navegador vai para background e o timer congela (na maioria das vezes).
+          // Se o app NÃO abrir, o usuário vê um erro (impossível de evitar 100% sem Universal Links)
+          // e depois o timer redireciona para a loja.
+          setTimeout(function() {
+            // Verifica se a página ainda está visível. 
+            // Se estiver, significa que o app não abriu.
+            if (!document.hidden && !document.webkitHidden) {
+              window.location.href = APP_STORE_URL;
+            }
+          }, 2500); // 2.5 segundos de espera
+          return;
+        }
+
+        // ---------------------------------------------------------
+        // DESKTOP / OUTROS
+        // ---------------------------------------------------------
+        // Se abrir no PC, manda para a loja ou site
+        window.location.href = APP_STORE_URL; 
+      }
+
+      // Inicia imediatamente ao carregar
+      startRedirect();
+
+    })();
+  </script>
+</body>
+</html>

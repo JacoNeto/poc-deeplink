@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "709134491664",
+    "project_id": "poc-deeplink-487ac",
+    "storage_bucket": "poc-deeplink-487ac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:709134491664:android:12bb16e3254fdefa75aa95",
+        "android_client_info": {
+          "package_name": "com.example.poc_deeplink"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBirQrauphcwpJ38madcosoqGJk13s78EA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

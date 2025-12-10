@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Deep Link POC - Redirecting to app...">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="poc_deeplink">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Deep Link POC - Redirecting...</title>
+  <link rel="manifest" href="manifest.json">
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
+    }
+    .container {
+      max-width: 400px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .message {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    .fallback-link {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 24px;
+      background: white;
+      color: #667eea;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    .fallback-link:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner"></div>
+    <div class="message" id="message">Opening app...</div>
+    <a href="#" id="fallback-link" class="fallback-link" style="display: none;">
+      Download App
+    </a>
+  </div>
+
+  <script>
+    (function() {
+      // Get the current path and query parameters
+      const path = window.location.pathname + window.location.search;
+      const hash = window.location.hash;
+      const fullPath = path + hash;
+      
+      // Detect platform
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+      
+      // App Store URLs (replace with your actual app store URLs)
+      const iOSAppStoreUrl = 'https://apps.apple.com/app/your-app-id'; // Replace with your App Store URL
+      const androidPlayStoreUrl = 'https://play.google.com/store/apps/details?id=com.example.poc_deeplink'; // Replace with your Play Store URL
+      
+      // Deep link URLs
+      // Try universal link first (iOS) or app link (Android)
+      const universalLink = 'https://poc-deeplink-487ac.web.app' + fullPath;
+      // Fallback to custom URL scheme
+      const customScheme = 'pocdeeplink://' + fullPath.replace(/^\//, '');
+      
+      let appOpened = false;
+      let redirectTimer;
+      
+      function redirectToStore() {
+        if (appOpened) return;
+        
+        const messageEl = document.getElementById('message');
+        const linkEl = document.getElementById('fallback-link');
+        
+        messageEl.textContent = 'App not installed. Redirecting to store...';
+        
+        if (isIOS) {
+          linkEl.href = iOSAppStoreUrl;
+          linkEl.textContent = 'Download from App Store';
+          linkEl.style.display = 'inline-block';
+          // Auto-redirect after showing link
+          setTimeout(() => {
+            window.location.href = iOSAppStoreUrl;
+          }, 2000);
+        } else if (isAndroid) {
+          linkEl.href = androidPlayStoreUrl;
+          linkEl.textContent = 'Download from Play Store 2';
+          linkEl.style.display = 'inline-block';
+          // Auto-redirect after showing link
+          setTimeout(() => {
+            window.location.href = androidPlayStoreUrl;
+          }, 2000);
+        } else {
+          messageEl.textContent = 'Please open this link on a mobile device.';
+        }
+      }
+      
+      function tryOpenApp() {
+        // Try universal link first
+        if (isIOS || isAndroid) {
+          window.location.href = universalLink;
+        } else {
+          // For desktop, try custom scheme
+          window.location.href = customScheme;
+        }
+        
+        // Set a timer to redirect to store if app doesn't open
+        redirectTimer = setTimeout(() => {
+          redirectToStore();
+        }, 2500); // 2.5 seconds should be enough to detect if app opened
+      }
+      
+      // Detect if page lost focus (app opened)
+      window.addEventListener('blur', function() {
+        appOpened = true;
+        if (redirectTimer) {
+          clearTimeout(redirectTimer);
+        }
+      });
+      
+      // Detect if page is hidden (app opened)
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+          appOpened = true;
+          if (redirectTimer) {
+            clearTimeout(redirectTimer);
+          }
+        }
+      });
+      
+      // Try to open the app
+      tryOpenApp();
+      
+      // Fallback: if user clicks the link manually
+      document.getElementById('fallback-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        redirectToStore();
+      });
+    })();
+  </script>
+  
+  <!-- Flutter web app (if user wants to use web version) -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

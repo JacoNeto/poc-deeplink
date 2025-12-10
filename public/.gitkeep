@@ -1,0 +1,3 @@
+# This directory contains only the redirect page and .well-known files
+# It's separate from the Flutter web build to avoid deploying the entire app
+
